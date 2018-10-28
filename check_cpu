@@ -1,0 +1,87 @@
+#! /bin/bash
+
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
+
+PROGNAME=`basename $0`
+PROGPATH=`echo $0 | sed -e 's,[\\/][^\\/][^\\/]*$,,'`
+REVISION="1.0.0"
+
+#. $PROGPATH/utils.sh
+
+
+print_usage() {
+	echo "Usage: $PROGNAME [ Warning threshold ]"
+}
+
+print_revision() {
+	echo "$PROGNAME"
+	echo "Nagios plugin to monitor the cpu load"
+	echo "Version: $REVISION"
+	echo "Johann Baudy - http://www.gnu.org/licenses/gpl-2.0.txt"
+}
+
+print_help() {	
+	echo ""
+	print_usage
+	echo ""
+	echo "This plugin checks disk space availability."
+	echo ""
+	print_revision
+	echo ""
+	support
+	exit 0
+}
+
+case "$1" in
+	--help)
+		print_help
+		exit 0
+		;;
+	-h)
+		print_help
+		exit 0
+		;;
+	--version)
+   		print_revision
+		exit 0
+		;;
+	-v)
+		print_revision
+		exit 0
+		;;
+	*)
+
+		if [ -n "$1" ] ; then
+			LIMIT=$1
+		else
+			LIMIT=1
+		fi			
+
+
+		#CPU15MIN=$(cat /proc/loadavg | awk '{print $3}')
+		CPUPROCESS=$(pidstat -h 10 1)
+		echo "$CPUPROCESS"
+		CPULOAD=$(echo "$CPUPROCESS" | awk '{if (NR>3) s+=$7} END {print s}')
+		echo "---$CPULOAD"
+		NBPROC=$(grep -c ^processor /proc/cpuinfo)
+		#echo $NBPROC
+		#echo $LIMIT
+		#echo $INFO
+		if [[ -z $CPULOAD ]]; then
+			echo "CPU OK"
+			exit 0			
+		fi
+		if (( $(echo "$CPULOAD < $LIMIT" | bc -l) )) ; then
+			echo "CPU OK"
+			exit 0			
+		else	
+			if (( $(echo "$CPULOAD < ($NBPROC*100-10)" | bc -l) )) ; then
+				echo "CPU WARNING"
+				exit 2
+			else
+				echo "CPU CRITICAL"
+				exit 1
+			fi
+		fi
+		;;
+esac

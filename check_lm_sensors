@@ -1,0 +1,82 @@
+#! /bin/bash
+
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
+
+PROGNAME=`basename $0`
+PROGPATH=`echo $0 | sed -e 's,[\\/][^\\/][^\\/]*$,,'`
+REVISION="1.0.0"
+
+#. $PROGPATH/utils.sh
+
+
+print_usage() {
+	echo "Usage: $PROGNAME [ Temperature sensor name's. eg. 'CPU temp' ]"
+}
+
+print_revision() {
+	echo "$PROGNAME"
+	echo "Nagios plugin to monitor the values of sensors detected by lm_sensors package"
+	echo "Version: $REVISION"
+	echo "Egidio Garbin - http://www.gnu.org/licenses/gpl-2.0.txt"
+}
+
+print_help() {	
+	echo ""
+	print_usage
+	echo ""
+	echo "This plugin checks hardware status using the lm_sensors package."
+	echo "First configure lm_sensors with your rights parameters. eg. /etc/sensors"
+	echo "Report OK if all ok or CRITICAL state if an alarm was detected."
+	echo ""
+	print_revision
+	echo ""
+	support
+	exit 0
+}
+
+case "$1" in
+	--help)
+		print_help
+		exit 0
+		;;
+	-h)
+		print_help
+		exit 0
+		;;
+	--version)
+   		print_revision
+		exit 0
+		;;
+	-v)
+		print_revision
+		exit 0
+		;;
+	*)
+		
+		#echo "TOTO"
+		#type sensors >& /dev/null
+		#RET=$?
+		#echo "TOTO"
+		#if [ "$RET" -eq 0 ] ; then
+			if [ -n "$1" ] ; then
+				TEMP=$(sensors | grep "$1" | grep -Eo "[-0-9.]{1,}")
+				#echo $TEMP
+				CTEMP=$(echo $TEMP | cut -d' ' -f2)
+				ALARM=$(sensors | grep "$1" |grep ALARM | cut -d' ' -f1 | sed s/://g)
+				if [ -z "$ALARM" ] && [ -z "$WRONG" ] ; then
+					echo "OK SENSORS"
+					exit 0			
+				else		
+					echo -e "CRITICAL - ALARM ON:\n$ALARM\n$(sensors)"
+					exit 2
+				fi
+			else
+				echo "SENSORS UNKNOWN - Argument not specified"
+				exit -1
+			fi	
+		#else
+		#	echo "SENSORS UNKNOWN - Command not found"
+		#	exit -1
+		#fi
+		;;
+esac

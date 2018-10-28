@@ -1,0 +1,92 @@
+#! /bin/bash
+
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
+
+PROGNAME=`basename $0`
+PROGPATH=`echo $0 | sed -e 's,[\\/][^\\/][^\\/]*$,,'`
+REVISION="1.0.0"
+
+#. $PROGPATH/utils.sh
+
+
+print_usage() {
+	echo "Usage: $PROGNAME [ Hostname ]"
+}
+
+print_revision() {
+	echo "$PROGNAME"
+	echo "Nagios plugin to check ups status"
+	echo "Version: $REVISION"
+	echo "Johann Baudy - http://www.gnu.org/licenses/gpl-2.0.txt"
+}
+
+print_help() {	
+	echo ""
+	print_usage
+	echo ""
+	echo "This plugin checks host status using ping."
+	print_revision
+	echo ""
+	support
+	exit 0
+}
+
+case "$1" in
+	--help)
+		print_help
+		exit 0
+		;;
+	-h)
+		print_help
+		exit 0
+		;;
+	--version)
+   		print_revision
+		exit 0
+		;;
+	-v)
+		print_revision
+		exit 0
+		;;
+	*)
+		
+		if [ -n "$1" ] ; then
+			STATUS=$(upsc $1 ups.status 2> /dev/null)
+			if [ $? -eq 0 ]
+			then
+				BATTERY=$(upsc $1 battery.charge 2> /dev/null)
+				if [ $? -eq 0 ]
+				then
+					echo "STATUS: $STATUS"
+					echo "BATTERY: $BATTERY"
+					echo ""
+
+					if [ "$STATUS" == "OL CHRG" ];
+					then
+						if [ "$BATTERY" == "100" ];
+						then
+							echo "$1 is READY"
+							exit 0
+						else
+						
+							echo "$1 is CHARGING"
+							exit 2
+						fi
+					else	
+						echo "$1 is DISCHARGING"
+						exit 1
+					fi
+				else	
+					echo "$1 is KO"
+					exit -1
+				fi
+			else	
+				echo "$1 is KO"
+				exit -1
+			fi
+		else
+			echo "HOST UNKNOWN - Argument not specified"
+			exit -1
+		fi	
+		;;
+esac
