@@ -77,6 +77,18 @@ def main():
 				state_header = "WARNING"
 			else:
 				state_header = "CRITICAL"
+			
+			if state == 0:
+				if 'critical-cmd' in item:
+					subprocess.call(item['critical-cmd'], shell=True)
+			
+			elif state == 2:
+				if 'warning-cmd' in item:
+					subprocess.call(item['warning-cmd'], shell=True)
+
+			else:
+				if 'ok-cmd' in item:
+					subprocess.call(item['ok-cmd'], shell=True)
 
 			msg_header = "[ALERT] Monitoring: "+item['name']+" is "+state_header
 
