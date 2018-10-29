@@ -4,6 +4,7 @@ import time
 import syslog
 import os
 import sys
+import socket
 
 import settings
 
@@ -90,7 +91,7 @@ def main():
 				if 'ok-cmd' in item:
 					subprocess.call(item['ok-cmd'], shell=True)
 
-			msg_header = "[ALERT] Monitoring: "+item['name']+" is "+state_header
+			msg_header = "[ALERT] Monitoring: "+socket.gethostname()+" - "+ item['name']+" is "+state_header
 
 			print(state, info)
 			syslog.syslog(msg_header)
