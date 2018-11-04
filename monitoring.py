@@ -5,8 +5,22 @@ import syslog
 import os
 import sys
 import socket
+import datetime
 
 import settings
+
+def is_time_between(begin_t, end_t, check_time=None):
+	begin_time = datetime.datetime.strptime(begin_t, '%H:%M').time()
+	end_time = datetime.datetime.strptime(end_t, '%H:%M').time()
+	#print(begin_time)	
+	#print(end_time)	
+	# If check time is not given, default to current UTC time
+	check_time = check_time or datetime.datetime.now().time()
+	#print(check_time)	
+	if begin_time < end_time:
+		return check_time >= begin_time and check_time <= end_time
+	else: # crosses midnight
+		return check_time >= begin_time or check_time <= end_time
 
 def send_mail(subject, in_msg):
         from email.mime.text import MIMEText
@@ -39,22 +53,32 @@ def main():
 		notify=False
 
 		if 'state' not in item:
-			item['state'] = {'current':255, 'lastchange':0}
+			item['state'] = {'current':0, 'lastchange':0}
 
-		# EXECUTE TEST
-		process = "./check_"+item['type']
-		if os.path.isfile(process):
-			if type(item['arg']) is list:
-				args = ' '.join(item['arg'])
-			else:
-				args = item['arg']
-			res = execute(process+" "+args)
-			state = res[0]
-			info = res[1]
-		else:
-			print(process+" does not exists")
-			sys.exit(-1)
+		skip = False
+		if 'invalid-time' in item:
+			if len(item['invalid-time']) == 2:
+				if is_time_between(item['invalid-time'][0], item['invalid-time'][1]):
+					skip = True
+			#print(skip)
 		
+		# EXECUTE TEST
+		if not skip:
+			process = "./check_"+item['type']
+			if os.path.isfile(process):
+				if type(item['arg']) is list:
+					args = ' '.join(item['arg'])
+				else:
+					args = item['arg']
+				res = execute(process+" "+args)
+				state = res[0]
+				info = res[1]
+			else:
+				print(process+" does not exists")
+				sys.exit(-1)
+		else:
+			state = item['state']['current']
+				
 
 		# STATE UPATE PROCESS
 		if item['state']['current'] == state:
