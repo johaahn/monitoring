@@ -1,0 +1,33 @@
+#!/usr/bin/python
+TIME_BETWEEN_CHECK = 5
+TIME_BETWEEN_NOTIFICATION = 120
+EMAIL_FROM = "source@example.net"
+EMAIL_TO = "destination@example.net"
+CHECKS = [
+	{'name':'host-example', 
+		'type':'host', 
+		'arg': '192.168.1.1'
+	},
+	{'name':'Temp1-example', 
+		'type':'lm_sensors', 
+		'arg': 'TEMP1'
+	},
+	{'name':'UPS-example', 
+		'type':'ups', 
+		'arg': 'eaton@localhost'
+	},
+	{'name':'Disk-example', 
+		'type':'disk', 
+		'arg': ['/dev/sda','2']
+	},
+	{'name':'Disk standby example', 
+		'type':'disk_state', 
+		'arg': ['/dev/sda','standby'],
+		'invalid-time':['5:00','23:00'] 
+	},
+	{'name':'CPU load example', 
+		'type':'cpu', 
+		'arg': '150'
+	}
+	]
+
