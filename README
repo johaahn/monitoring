@@ -1,0 +1,19 @@
+1/ Get source code
+	$ git clone https://github.com/johaahn/monitoring.git
+
+2/ Copy default settings settings
+	$ cd monitoring
+	$ cp ./settings.py.example ./settings.py
+
+3/ Edit settings
+	$ vim ./settings.py 
+
+4/ Copy systemd config service
+	$ sudo cp ./monitoring.service /etc/systemd/system/monitoring.service
+
+5/ Replace example with your user name in systemd service config file
+	$ sudo vim /etc/systemd/system/monitoring.service
+
+6/ Start monitoring
+	$ sudo systemctl restart monitoring.service
+
