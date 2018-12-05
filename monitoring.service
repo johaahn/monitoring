@@ -1,0 +1,13 @@
+[Unit]
+Description=Monitoring Service
+After=network.target
+
+[Service]
+User=example
+Restart=always
+Type=simple
+ExecStart=/home/example/monitoring/monitoring.py
+WorkingDirectory=/home/example/monitoring
+
+[Install]
+WantedBy=multi-user.target
