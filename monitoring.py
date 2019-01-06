@@ -78,12 +78,14 @@ def main():
 				sys.exit(-1)
 		else:
 			state = item['state']['current']
+			info = None
 				
 
 		# STATE UPATE PROCESS
 		if item['state']['current'] == state:
 			if state != 0:
 				elapsed = time.time()-item['state']['lastchange']
+				print(item)
 				print(elapsed)
 				print(state, info)
 				if elapsed > (settings.TIME_BETWEEN_NOTIFICATION*60):
@@ -95,7 +97,7 @@ def main():
 			notify = True
 
 		# MESSAGE GENERATION
-		if notify:			
+		if notify and info:			
 			if state == 0:
 				state_header = "OK"
 			elif state == 2:
