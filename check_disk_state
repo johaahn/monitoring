@@ -57,13 +57,18 @@ case "$1" in
 		fi	
 		
 		if [ -n "$1" ] ; then
-			sudo /sbin/hdparm -C $1
 			STATE=$(sudo /sbin/hdparm -C $1 | awk 'FNR == 3 {print $4}')
-			#echo $INFO
-			if [ "$STATE" == "$MODE" ] ; then
+			SMARTSTATUS=$(/usr/sbin/smartctl -A $1 | grep Reallocated_Sector_Ct | awk '{print $10}')
+			if [ "$STATE" == "$MODE" ] && [ "$SMARTSTATUS" == "0" ] ; then
 				echo "MODE OK"
 				exit 0			
 			else	
+				if [ "$STATE" != "$MODE" ] ; then
+					sudo /sbin/hdparm -C $1
+				fi
+				if [ "$SMARTSTATUS" != "0" ] ; then
+					/usr/sbin/smartctl -A $1
+				fi
 				echo "DISK CRITICAL"
 				exit 1
 			fi
