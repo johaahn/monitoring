@@ -57,17 +57,28 @@ case "$1" in
 		fi	
 		
 		if [ -n "$1" ] ; then
-			STATE=$(sudo /sbin/hdparm -C $1 | awk 'FNR == 3 {print $4}')
-			SMARTSTATUS=$(/usr/sbin/smartctl -A $1 | grep Reallocated_Sector_Ct | awk '{print $10}')
-			if [ "$STATE" == "$MODE" ] && [ "$SMARTSTATUS" == "0" ] ; then
+			#Bug, sometimes first request timeout...
+			DISK=$(readlink -f $1)
+			STATE_WAKEUP=$(sudo /sbin/hdparm -C $DISK | awk 'FNR == 3 {print $4}')
+			SMARTSTATUS_WAKEUP=$(sudo /usr/sbin/smartctl -A $DISK | grep Reallocated_Sector_Ct | awk '{print $10}')
+			echo $DISK
+			echo $STATE_WAKEUP
+			echo $SMARTSTATUS_WAKEUP
+
+			STATE=$(sudo /sbin/hdparm -C $DISK | awk 'FNR == 3 {print $4}')
+			SMARTSTATUS=$(sudo /usr/sbin/smartctl -A $DISK | grep Reallocated_Sector_Ct | awk '{print $10}')
+			echo $MODE
+			echo $STATE
+			echo $SMARTSTATUS
+			if [[ ("$STATE" == "$MODE" || "$STATE_WAKEUP" == "$MODE") && "$SMARTSTATUS" == "0" ]] ; then
 				echo "MODE OK"
 				exit 0			
 			else	
 				if [ "$STATE" != "$MODE" ] ; then
-					sudo /sbin/hdparm -C $1
+					sudo /sbin/hdparm -C $DISK
 				fi
 				if [ "$SMARTSTATUS" != "0" ] ; then
-					/usr/sbin/smartctl -A $1
+					sudo /usr/sbin/smartctl -A $DISK
 				fi
 				echo "DISK CRITICAL"
 				exit 1
@@ -78,3 +89,4 @@ case "$1" in
 		fi	
 		;;
 esac
+			#echo $INFO
